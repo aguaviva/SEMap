@@ -52,7 +52,7 @@
     header_remove("Connection");
 
     // Create connection
-    $conn = new SQLite3("/storage/sdcard0/www/SEMap/SEMap.sqlite");
+    $conn = new SQLite3("SEMap.sqlite");
     if ($conn===false) 
     {
         echo "Failed to connect to MySQL:  " . $conn->lastErrorMsg();

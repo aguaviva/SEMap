@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html>
 	<head>
 		<title>SE Map</title>
@@ -17,6 +17,7 @@
                 border: solid;
                 border-width: 1;
                 height: calc(100vh - 70px);
+                background-color: #eeeedd;
             }
 		</style>
 		<script>
@@ -44,7 +45,7 @@
                 
                 $.ajax({
                   type: "POST",
-                  url: "SEMapDatabase.php",
+                  url: "./SEMapDatabase.php",
                   dataType: "text",
                   data: JSON.stringify({nodes:nodes, edges:edges, credentials:credentials }),
                   success: successFunction
@@ -70,7 +71,7 @@
                 
                 $.ajax({
                   type: "DELETE",
-                  url: "SEMapDatabase.php",
+                  url: "./SEMapDatabase.php",
                   dataType: "json",
                   contentType: "application/json; charset=utf-8",
                   data: JSON.stringify({nodes:nodes, edges:edges, credentials:credentials }),
@@ -81,7 +82,7 @@
             function LoadDataFromDatabase()
             {
                 // load elements from database and build diagram                
-                $.get("SEMapDatabase.php", function(data)
+                $.get("./SEMapDatabase.php", function(data)
                 {
                     var data = JSON.parse(data);
                     
@@ -118,7 +119,7 @@
                     }
                     else
                     {
-                        nds[i].style({'border-color': 'gray', "border-width":0})
+                        nds[i].style({'border-color': 'black', "border-width":5})
                     }
                 }                
             }
@@ -198,6 +199,13 @@
 					style: 
 					[
 						{
+							selector: 'core',
+							css: 
+							{
+					            "active-bg-color":"#eeeedd"
+							}
+						},
+						{
 							selector: 'node',
 							css: 
 							{
@@ -208,7 +216,8 @@
                                 'text-wrap': 'wrap',   
                                 'width': '300px',       
                                 'text-max-width' : '300px',
-                                'height': '100px',                      
+                                'height': '100px',     
+                                'background-color': '#FFF',
 							}
 						},
 						{
