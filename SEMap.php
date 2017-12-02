@@ -17,7 +17,7 @@
                 border: solid;
                 border-width: 1;
                 height: calc(100vh - 70px);
-                background-color: #eeeedd;
+                background-color: #eeeeee;
             }
 		</style>
 		<script>
@@ -119,7 +119,7 @@
                     }
                     else
                     {
-                        nds[i].style({'border-color': 'black', "border-width":5})
+                       nds[i].style({'border-color': 'black', "border-width":5})
                     }
                 }                
             }
@@ -172,6 +172,8 @@
                                 $("#modal-login").prop("checked", false);
                                 $("#loginlogout").text("Logout");        
                                 $(".admin").show();
+                                
+                                $("#modal-admin-help").prop("checked", true);
                             }
                             else
                             {
@@ -199,13 +201,6 @@
 					style: 
 					[
 						{
-							selector: 'core',
-							css: 
-							{
-					            "active-bg-color":"#eeeedd"
-							}
-						},
-						{
 							selector: 'node',
 							css: 
 							{
@@ -217,7 +212,6 @@
                                 'width': '300px',       
                                 'text-max-width' : '300px',
                                 'height': '100px',     
-                                'background-color': '#FFF',
 							}
 						},
 						{
@@ -362,6 +356,14 @@
                     POST(cy.nodes());
                 });
 
+                $( "#help" ).click(function() 
+                {
+                    if (loggedIn()) 
+                        $('#modal-admin-help').prop('checked', true);
+                    else
+                        $('#modal-help').prop('checked', true);
+                });
+
                 // Load graph from database
                 //
                 LoadDataFromDatabase();
@@ -375,7 +377,7 @@
 	    <!-- header -->
         <header class="sticky">
           <a href="#" class="logo">SE Map</a>
-          <button onclick="$('#modal-help').prop('checked', true);" >Help</button>
+          <button id="help" >Help</button>
           <button class="admin" id="applyLayout" >Apply Layout</button>
           <button class="admin" id="saveDatabase">Save</button>
           <button id="loginlogout" style="float: right">Login</button>
@@ -448,13 +450,39 @@
         <div class="modal">
             <div class="wide">
                 <div class="card large">
-                    <label for="modal-help" class="close"></label>
                     <div class="section">
                         <h3>Quick start</h3>
                         <ul>
-                            <li>Start in the highlighted box and go from there.</li>
-                            <li>Controls: same as google maps.</li>
+                            <li>Start in the <b>highlighted</b> box and go from there.</li>
+                            <li><b>Controls</b>: same as Google Maps.</li>
+                            <li><b>Help</b> brings back this dialog.</li>
                         </ul>
+                        <div class="input-group fluid">
+                            <button type="button" class="primary" onclick='$("#modal-help").prop("checked", false);' id="login">OK</button>
+                        </div>
+                    </div>
+                </div>                
+            </div>
+        </div>
+
+        <!-- help dialog -->
+        <input id="modal-admin-help" type="checkbox"/>
+        <div class="modal">
+            <div class="wide">
+                <div class="card large">
+                    <div class="section">
+                        <h3>Quick start</h3>
+                        <ul>
+                            <li>The boxes are for the questions, the arrows for the answers</li>
+                            <li><b>Long click</b> for editing text</li>
+                            <li><b>Right click</b> creates a new box</li>
+                            <li><b>Shift + clicking</b> in two boxes links them with an arrow</li>
+                            <li><b>Del</b> key to erase an arrow/box</li>
+                            <li><b>Help</b> brings back this dialog.</li>
+                        </ul>
+                        <div class="input-group fluid">
+                            <button type="button" class="primary" onclick='$("#modal-admin-help").prop("checked", false);' id="login">OK</button>
+                        </div>
                     </div>
                 </div>                
             </div>
