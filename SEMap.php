@@ -21,93 +21,142 @@
             }
 		</style>
 		<script>
-		    var credentials = { username: "", password : ""};
+		    function databaseHTTP()
+		    {
+		        var credentials = {};
+                this.setCredentials = function (_credentials, successFunction)		    
+                {
+                    credentials = _credentials;
+                    $.ajax({
+                        type: "POST",
+                        url: "SEMapDatabase.php",
+                        dataType: "json",
+                        data: JSON.stringify({"credentials":credentials}),
+                        success: successFunction
+                    });
+                }
+		        
+                this.POST = function (nodes, edges, successFunction)		    
+                {
+                   $.ajax({
+                      type: "POST",
+                      url: "./SEMapDatabase.php",
+                      dataType: "text",
+                      data: JSON.stringify({nodes:nodes, edges:edges, credentials:credentials }),
+                      success: successFunction
+                    });                    
+                }
 		
+                this.DELETE = function (nodes, edges, successFunction)		    
+                {
+                    $.ajax({
+                      type: "DELETE",
+                      url: "./SEMapDatabase.php",
+                      dataType: "json",
+                      contentType: "application/json; charset=utf-8",
+                      data: JSON.stringify({nodes:nodes, edges:edges, credentials:credentials }),
+                      success : successFunction
+                    });                    
+                }
+		
+                this.LoadDataFromDatabase = function (callback)		    
+                {
+                    $.get("./SEMapDatabase.php", function(data)
+                    {
+                        callback(data);
+                    });
+                }
+		    }
+		    
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		    // Database loading, deleting, saving
 		    //
-            function POST(eles, successFunction)
-            {
-                var nodes = [];
-                var edges = [];                    
-                for(var i=0;i<eles.length;i++)
+		    function databaseIO(_backend)
+		    {
+		        var backend = _backend;
+		        var credentials = { username: "", password : ""};
+		        
+		        this.setCredentials = function (user,pass, callback)
+		        {
+		            credentials.username = user;
+		            credentials.password = pass;
+
+                    backend.setCredentials(credentials, callback)
+		        }
+		        
+                this.POST = function(eles, successFunction)
                 {
-                    var e = eles[i];
-                    if (e.isNode())
+                    var nodes = [];
+                    var edges = [];                    
+                    for(var i=0;i<eles.length;i++)
                     {
-                        nodes.push({id:e.id(),l:e.data("label"), x:e.position().x, y:e.position().y});
+                        var e = eles[i];
+                        if (e.isNode())
+                        {
+                            nodes.push({id:e.id(),l:e.data("label"), x:e.position().x, y:e.position().y});
+                        }
+                        else if (e.isEdge())
+                        {
+                            edges.push({id:e.id(), s:e.data("source"), t:e.data("target"), l:e.data("label") });
+                        }
                     }
-                    else if (e.isEdge())
-                    {
-                        edges.push({id:e.id(), s:e.data("source"), t:e.data("target"), l:e.data("label") });
-                    }
+                    
+                    backend.POST(nodes,edges, successFunction);
                 }
                 
-                $.ajax({
-                  type: "POST",
-                  url: "./SEMapDatabase.php",
-                  dataType: "text",
-                  data: JSON.stringify({nodes:nodes, edges:edges, credentials:credentials }),
-                  success: successFunction
-                });
-            }
-            
-            function DELETE(eles, successFunction)
-            {
-                var nodes = [];
-                var edges = [];                    
-                for(var i=0;i<eles.length;i++)
+                this.DELETE = function(eles, successFunction)
                 {
-                    var e = eles[i];
-                    if (e.isNode())
+                    var nodes = [];
+                    var edges = [];                    
+                    for(var i=0;i<eles.length;i++)
                     {
-                        nodes.push(e.id());
+                        var e = eles[i];
+                        if (e.isNode())
+                        {
+                            nodes.push(e.id());
+                        }
+                        else if (e.isEdge())
+                        {
+                            edges.push(e.id());
+                        }
                     }
-                    else if (e.isEdge())
-                    {
-                        edges.push(e.id());
-                    }
+                    
+                    backend.DELETE(nodes,edges, successFunction);
                 }
-                
-                $.ajax({
-                  type: "DELETE",
-                  url: "./SEMapDatabase.php",
-                  dataType: "json",
-                  contentType: "application/json; charset=utf-8",
-                  data: JSON.stringify({nodes:nodes, edges:edges, credentials:credentials }),
-                  success : successFunction
-                });
-            }
-
-            function LoadDataFromDatabase()
-            {
-                // load elements from database and build diagram                
-                $.get("./SEMapDatabase.php", function(data)
+    
+                this.LoadDataFromDatabase = function ()
                 {
-                    var data = JSON.parse(data);
-                    
-                    var elms = []
-                    
-                    var nodes = data["nodes"];
-                    for(var node in nodes)
+                    // load elements from database and build diagram                
+                    backend.LoadDataFromDatabase( function(data)
                     {
-                        var n = nodes[node];
-                        elms.push( { group: "nodes", data: { id: n["id"], label: n["q"] }, position:{x:n["x"], y:n["y"]} })                      
-                    }
-
-                    var edges = data["edges"];
-                    for(var edge in edges)
-                    {
-                        var e = edges[edge];
-                        elms.push( { group: "edges", data: { id: e["id"], source: e["s"], target: e["t"], label: e["l"] } })                      
-                    }
-                    cy.add(elms);
-                    SetStyle();
-                    cy.fit();
-                    cy.autolock( true );
-                });
-            }
-
+                        var data = JSON.parse(data);
+                        
+                        var elms = []
+                        
+                        var nodes = data["nodes"];
+                        for(var node in nodes)
+                        {
+                            var n = nodes[node];
+                            elms.push( { group: "nodes", data: { id: n["id"], label: n["q"] }, position:{x:n["x"], y:n["y"]} })                      
+                        }
+    
+                        var edges = data["edges"];
+                        for(var edge in edges)
+                        {
+                            var e = edges[edge];
+                            elms.push( { group: "edges", data: { id: e["id"], source: e["s"], target: e["t"], label: e["l"] } })                      
+                        }
+                        cy.add(elms);
+                        SetStyle();
+                        cy.fit();
+                        cy.autolock( true );
+                    });
+                }
+		    }
+		    
+		    
+		    base = new databaseIO(new databaseHTTP());
+		    
             function SetStyle()
             {
                 var nds = cy.nodes()
@@ -158,27 +207,19 @@
                 
                 $( "#login" ).click(function() 
                 {
-                    credentials["username"] = $("#username").val();
-                    credentials["password"] = $("#password").val();
-                    $.ajax({
-                        type: "POST",
-                        url: "SEMapDatabase.php",
-                        dataType: "json",
-                        data: JSON.stringify({credentials}),
-                        success: function(res)
+                    base.setCredentials($("#username").val(), $("#password").val(), function(res)
+                    {
+                        if (res.res=="OK")
                         {
-                            if (res.res=="OK")
-                            {
-                                $("#modal-login").prop("checked", false);
-                                $("#loginlogout").text("Logout");        
-                                $(".admin").show();
-                                
-                                $("#modal-admin-help").prop("checked", true);
-                            }
-                            else
-                            {
-                                alert(res.res);
-                            }
+                            $("#modal-login").prop("checked", false);
+                            $("#loginlogout").text("Logout");        
+                            $(".admin").show();
+                            
+                            $("#modal-admin-help").prop("checked", true);
+                        }
+                        else
+                        {
+                            alert(res.res);
                         }
                     });
                 });
@@ -244,7 +285,7 @@
                     
                     $("#dialog_label").text("Answer")
                     $("#dialog_input").attr("data", evt.target.id());
-                    $("#dialog_input").val(evt.target.data().label)
+                    $("#dialog_input").val(evt.target.data().label);
                     $("#modal-edit").prop("checked", true);
                 });
 
@@ -256,7 +297,7 @@
                     var q = $("#dialog_input")[0];
                     var id = q.attributes["data"].nodeValue;
                     cy.$( "#"+id ).data("label", q.value);
-                    POST(cy.$( "#"+id ));
+                    base.POST(cy.$( "#"+id ));
                     $("#modal-edit").prop("checked", false);
                 });                   
 
@@ -278,18 +319,18 @@
                     var sp = source.position();
                     var st = target.position();
                     
-                    var id = generateRandomID()
+                    var id = generateRandomID();
                     
                     var eles = cy.add([
                       { group: "nodes", data: { id: id, label: "New Node" }, position: { x: (sp.x + st.x)*.5, y: (sp.y + st.y)*.5 } },                      
                       { group: "edges", data: { id: generateRandomID(), source: source.id(), target: id } },
                       { group: "edges", data: { id: generateRandomID(), source: id, target: target.id(), label: evt.target.data().label } }
                     ]);
-                    POST(eles, function(data)
+                    base.POST(eles, function(data)
                     {
-                        var eles = cy.remove(cy.getElementById(evt.target.id()))
+                        var eles = cy.remove(cy.getElementById(evt.target.id()));
                         SetStyle();
-                        DELETE( eles );
+                        base.DELETE( eles );
                     });
                 });
 
@@ -301,7 +342,7 @@
                     if (evt.target===cy)
                     {                    
                         var eles = cy.add([{ group: "nodes", data: { id: generateRandomID(), label: "No question" }, renderedPosition: evt.originalEvent }]);
-                        POST(eles);
+                        base.POST(eles);
                     }
                 });
                 
@@ -320,7 +361,7 @@
                     
                         var eles = cy.add([{ group: "edges", data: { id: generateRandomID(), source: source, target: target, label: "No answer"  } }]); 
                         SetStyle();
-                        POST(eles);
+                        base.POST(eles);
                     }                    
                 });
 
@@ -335,7 +376,7 @@
                         if (!loggedIn()) return;
                         
                         var eles = cy.remove(":selected");
-                        DELETE(eles);
+                        base.DELETE(eles);
                     }
                 });
                 
@@ -353,7 +394,7 @@
                 {
                     if (!loggedIn()) return;
                     
-                    POST(cy.nodes());
+                    base.POST(cy.nodes());
                 });
 
                 $( "#help" ).click(function() 
@@ -366,7 +407,7 @@
 
                 // Load graph from database
                 //
-                LoadDataFromDatabase();
+                base.LoadDataFromDatabase();
                 $("#modal-help").prop("checked", true);
 			});
         
