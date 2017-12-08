@@ -395,6 +395,7 @@
                     if (!loggedIn()) return;
                     
                     base.POST(cy.nodes());
+                    base.POST(cy.edges());
                 });
 
                 $( "#help" ).click(function() 
