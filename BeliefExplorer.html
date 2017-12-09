@@ -78,7 +78,7 @@ $(document).ready(function()
 
     splitUrl = window.location.href.split("?");
     locationNoVars = splitUrl[0]
-    if (startingPoint.length==2)
+    if (splitUrl.length==2)
     {
         startingPoint =  splitUrl[1].split("=")[1]; 
     }
@@ -132,7 +132,7 @@ $(document).ready(function()
     </div>
 
     <footer>
-        <p>Creative commons | <a href="#"></a> | <a href="#"></a></p>
+        <p>MIT License | <a href="#">About</a> | <a href="https://github.com/aguaviva/SEMap">Github code</a></p>
     </footer>
 </body>
 </html>
