@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Belief Explorer</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<link rel="stylesheet" href="https://gitcdn.link/repo/Chalarangelo/mini.css/master/dist/mini-default.min.css">
+<script>
+
+var Database = {};
+var locationNoVars = "";
+var variables = {}
+
+function ProcessWithPush(sectionName, itemChosen)
+{
+    history.pushState(sectionName, "", locationNoVars + "?q="+sectionName);
+    Process(sectionName, itemChosen)
+}
+
+function Process(sectionName, itemChosen)
+{   
+    variables[sectionName] = itemChosen;
+    item = Database[sectionName];
+ 
+ 
+    $("#question").html(item.question.replace(/(<.*>)/, itemChosen))
+    var a="<ul>";
+    for(var key in item.answers)
+    {
+        var res = "";
+        var match = key.match(/\$(.*)\$/);
+        if (match!=null && match.length==2)
+            res = match[1]
+                
+        var answer = key.replace(/(\$)/g,"");
+        var nextSectionName = item.answers[key];
+ 
+        
+        var onClick = 'ProcessWithPush("'+nextSectionName+'", "'+res+'");return false;';
+
+        a+="<li>";
+        if (Database[nextSectionName]!=undefined)
+            a+="<a href=''onclick='"+onClick+"'>"+answer+"</a>";
+        else
+            a+="<div>"+answer+"</div>";
+        a+="</li>";
+    }
+    a+="</ul>";
+    $("#answers").html(a)
+}
+
+window.onpopstate = function(event) 
+{
+    if (event.state!==null)
+        Process(event.state, "");
+};
+
+function Validate(itemName)
+{
+    var orphan = []
+    for(var key1 in Database)
+    {
+        var responses = Database[key1].answers
+        for(var key2 in responses)
+        {
+            var dest = Database[responses[key2]]
+            if (dest==undefined)
+                orphan.push(responses[key2]);
+        }
+    }
+    return orphan;
+}
+
+$(document).ready(function()
+{
+    var startingPoint = "0244388211625568";
+
+    splitUrl = window.location.href.split("?");
+    locationNoVars = splitUrl[0]
+    if (startingPoint.length==2)
+    {
+        startingPoint =  splitUrl[1].split("=")[1]; 
+    }
+    
+    history.replaceState(startingPoint, "", locationNoVars + "?q="+startingPoint);
+    
+    $.get("./SEMapDatabase.php", function(data)
+    {
+        var data = JSON.parse(data);
+        Database = {}
+    
+        var nodes = data["nodes"];
+        for(var node in nodes)
+        {
+            var n = nodes[node];
+            Database[n["id"]]={question:n["q"], answers:{}};
+        }    
+        
+        var edges = data["edges"];
+        for(var edge in edges)
+        {
+            var e = edges[edge];
+            Database[e["s"]].answers[e["l"]] = e["t"];
+        }    
+
+
+        Validate(startingPoint);
+        Process(startingPoint,  "");
+
+    });    
+})
+
+</script>
+</head>
+<body>
+    <header>
+        <a href="#" class="logo">Belief Explorer</a>
+    </header>
+	<div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-lg-offset-4 col-md-6 col-md-offset-3 col-sm-12">
+                <form>
+                    <fieldset>
+                        <div id="question"></div>
+                        <br>
+                        <div class="input-group" id="answers"></div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Creative commons | <a href="#"></a> | <a href="#"></a></p>
+    </footer>
+</body>
+</html>
+
