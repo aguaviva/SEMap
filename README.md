@@ -9,7 +9,7 @@ Debating on certain beliefs often leads to aggressive conversations where nobody
 This repo includes:
 
 1) A simple bot that will ask you Socratic questions on your belief [Live Demo](http://semap.duckdns.org/BeliefExplorer.html)
-2) A conversation editor, to help the bot ask new/better questions. It shows the conversation as a graph. Needs a big monitor! [Live Demo](http://semap.duckdns.org/)
+2) A conversation editor, to help the bot ask new/better questions. [Live Demo](http://semap.duckdns.org/)
 
 ## The bot
 
