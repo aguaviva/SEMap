@@ -9,13 +9,8 @@
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-3425939-8"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'UA-3425939-8');
-</script>
-<script>
+function gtag(){dataLayer.push(arguments);}
 
 var Database = {};
 var locationNoVars = "";
@@ -29,6 +24,8 @@ function ProcessWithPush(sectionName, itemChosen)
 
 function Process(sectionName, itemChosen)
 {   
+    gtag('event', 'page', {'id':sectionName});    
+    
     variables[sectionName] = itemChosen;
     item = Database[sectionName];
  
@@ -83,6 +80,11 @@ function Validate(itemName)
 
 $(document).ready(function()
 {
+    window.dataLayer = window.dataLayer || [];
+    gtag('js', new Date());
+    gtag('config', 'UA-3425939-8');
+
+
     var startingPoint = "0244388211625568";
 
     splitUrl = window.location.href.split("?");
