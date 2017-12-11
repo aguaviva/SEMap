@@ -22,7 +22,7 @@ The included database will help you examing your beliefs.
 
 ## The conversations editor
 
-Writing all the possible paths in a regular document works when the numner of questions is small, when it grows it gets very complicated. The editor helps to have a birds eye view of the whole conversation and quickly find weak spots or inconsistencies. It is meant to be used by people that have some experience with the Socratic method. 
+Writing all the possible paths in a regular document works when the number of questions is small, when it grows it gets very complicated. The editor helps to have a birds eye view of the whole conversation and quickly find weak spots or inconsistencies. It is meant to be used by people that have some experience with the Socratic method. 
 
 Of course, it also helps create new bots about any idea and share them with the world.
 
@@ -30,7 +30,7 @@ Of course, it also helps create new bots about any idea and share them with the 
 
  I am hoping to get people involved at many levels, 
  
- 1) simple feedback
+ 1) just getting some simple feedback
  2) getting suggestions for new questions/answers
  3) have people to edit themselves the graph or even create a new one for a different topic 
 
@@ -38,4 +38,4 @@ The plan is to have no limits, to explore this idea of bringing the Socratic met
 
 ## Credits
 
-The included conversation has been *heavily* inspired by Anthony Magnabosco's conversations. https://www.youtube.com/user/magnabosco210 
+Credits for the conversation graph go to Anthony Magnabosco and his fantastic videos where he uses this questions with believers. https://www.youtube.com/user/magnabosco210 
