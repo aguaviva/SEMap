@@ -1,4 +1,6 @@
-## Purpose
+## Intro
+
+This tool will help you master the Socratic method.
 
 Debating on certain beliefs often leads to aggressive conversations where nobody changes their mind. Asking Socratic questions is a non confrontational method that helps break through dogmatism and impart the gift of doubt. This often results in drops of confidence in the belief.
 
@@ -7,7 +9,7 @@ Debating on certain beliefs often leads to aggressive conversations where nobody
 This repo includes:
 
 1) A simple bot that will ask you Socratic questions on your belief [Live Demo](http://semap.duckdns.org/BeliefExplorer.html)
-2) A conversation editor, that shows the conversation as a graph. [Live Demo](http://semap.duckdns.org/)
+2) A conversation editor, to help the bot ask new/better questions. It shows the conversation as a graph. Needs a big monitor! [Live Demo](http://semap.duckdns.org/)
 
 ## The bot
 
