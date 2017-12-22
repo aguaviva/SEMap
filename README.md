@@ -26,7 +26,10 @@ The included database will help you examing your beliefs.
 
 Writing all the possible paths in a regular document works when the number of questions is small, when it grows it gets very complicated. The editor helps to have a birds eye view of the whole conversation and quickly find weak spots or inconsistencies. It is meant to be used by people that have some experience with the Socratic method. 
 
-Of course, it also helps create new bots about any idea and share them with the world.
+The editor can be used in many ways:
+1) To create new bots on the subject you like and share them with others. 
+2) As a way to self reflect on an idea. The graph helps organize ones ideas in a structured way.
+3) With a friend, as a way to have an organized discussion. One would be Socrates, the other one the interlocutor. The goal as in any friendly sport would be to get better and it by just practicing it
 
 ## How you can help
 
