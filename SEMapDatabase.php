@@ -52,7 +52,12 @@
     header_remove("Connection");
 
     // Create connection
-    $conn = new SQLite3("SEMap.sqlite");
+    $lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
+    if ($lang=="es")
+        $conn = new SQLite3("SEMap_es.sqlite");
+    else
+        $conn = new SQLite3("SEMap_en.sqlite");
+
     if ($conn===false) 
     {
         echo "Failed to connect to MySQL:  " . $conn->lastErrorMsg();
