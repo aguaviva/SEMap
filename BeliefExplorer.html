@@ -23,9 +23,9 @@ function ProcessWithPush(sectionName, itemChosen)
 }
 
 function Process(sectionName, itemChosen)
-{   
+{
     gtag('event', 'page', {'id':sectionName});    
-    
+
     variables[sectionName] = itemChosen;
     item = Database[sectionName];
  
@@ -38,11 +38,10 @@ function Process(sectionName, itemChosen)
         var match = key.match(/\$(.*)\$/);
         if (match!=null && match.length==2)
             res = match[1]
-                
+
         var answer = key.replace(/(\$)/g,"");
         var nextSectionName = item.answers[key];
- 
-        
+
         var onClick = 'ProcessWithPush("'+nextSectionName+'", "'+res+'");return false;';
 
         a+="<li>";

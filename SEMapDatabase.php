@@ -1,4 +1,6 @@
 <?php
+
+
     function escapeJsonString($value) 
     { 
         # list from www.json.org: (\b backspace, \f formfeed)
@@ -10,8 +12,8 @@
 
     function ValidateCredentials($data) 
     {
-        $users = array("user" => "userpass");
-        
+        require 'users.php';
+
         if (array_key_exists("credentials", $data)==false)
         {   
             die('{"res":"need credentials"}');
@@ -29,8 +31,12 @@
             {
                 if ($users[$username]!=$password)
                 {   
-                    die('{"res":"bad login/passwd"}');
+		    die('{"res":"bad login/passwd"}');
                 }
+		else
+		{
+		    return $username;
+		}	
             }
             else
             {
@@ -47,7 +53,8 @@
     
     date_default_timezone_set("Europe/Brussels"); 
     
-    header("Content-Type: text/plain; charset=us-ascii");
+    header("Content-Type: application/javascript; charset=us-ascii");
+    //header("Content-Type: text/plain; charset=us-ascii");
     header_remove("Transfer-Encoding"); 
     header_remove("Connection");
 
@@ -63,12 +70,12 @@
         echo "Failed to connect to MySQL:  " . $conn->lastErrorMsg();
     }
 
-    if (!($conn->exec("CREATE TABLE IF NOT EXISTS NODES (id TEXT UNIQUE, label TEXT, x FLOAT, y FLOAT)")))
+    if (!($conn->exec("CREATE TABLE IF NOT EXISTS NODES (id TEXT UNIQUE, label TEXT, x FLOAT, y FLOAT, username TEXT DEFAULT 'raul', timestamp TEXT DEFAULT CURRENT_TIMESTAMP)")))
     {
         die( "Error creating NODES table" . $conn->lastErrorMsg());
     }
 
-    if (!($conn->exec("CREATE TABLE IF NOT EXISTS EDGES (id TEXT UNIQUE, source TEXT, target TEXT, answer TEXT)")))
+    if (!($conn->exec("CREATE TABLE IF NOT EXISTS EDGES (id TEXT UNIQUE, source TEXT, target TEXT, answer TEXT, username TEXT DEFAULT 'raul', timestamp TEXT DEFAULT CURRENT_TIMESTAMP)")))
     {
         die( "Error creating EDGES table" . $conn->lastErrorMsg());
     }
@@ -79,16 +86,16 @@
     {
         $data = json_decode(file_get_contents('php://input'), true);
 
-        validateCredentials($data);
+        $username = validateCredentials($data);
 
         if (!($conn->exec("BEGIN TRANSACTION")))
         {
-            die( $conn->lastErrorMsg());
+            die( '{"res":"' . $conn->lastErrorMsg() . '"}');
         } 
 
         if (array_key_exists("nodes", $data)==true)
         {
-            
+
             $nodelist = $data["nodes"];
             foreach ($nodelist as $node) 
             {
@@ -96,15 +103,16 @@
                 $l  = SQLite3::escapeString($node["l"]);
                 $x  = SQLite3::escapeString($node["x"]);
                 $y  = SQLite3::escapeString($node["y"]);
-                
-                $str = "insert or replace INTO NODES values( '$id', '$l', '$x', '$y' )";
+                $u  = $username;
+
+                $str = "insert or replace INTO NODES values( '$id', '$l', '$x', '$y', '$u', datetime('now') )";
                 if (!$conn->exec($str)) 
                 {
-                    die( "Insert failed: $str " . $conn->lastErrorMsg());
+                    die( '{"res":"Node Insert failed: ' . escapeJsonString($str) . '  ' . $conn->lastErrorMsg() . '"}');
                 }
             }
         }
-    
+
         if (array_key_exists("edges", $data)==true)
         {
             $edgelist = $data["edges"];
@@ -114,20 +122,21 @@
                 $s  = SQLite3::escapeString($edge["s"]);
                 $t  = SQLite3::escapeString($edge["t"]);
                 $l  = SQLite3::escapeString($edge["l"]);
-                
-                $str = "insert or replace INTO EDGES values( '$id', '$s', '$t', '$l' )";
+                $u  = $username;
+
+                $str = "insert or replace INTO EDGES values( '$id', '$s', '$t', '$l', '$u', datetime('now') )";
                 if (!$conn->exec($str)) 
                 {
-                    die( "Insert failed: $str" . $conn->lastErrorMsg());
+                    die( '{"res":"Edge Insert failed: ' . escapeJsonString($str) . '  ' . $conn->lastErrorMsg() . '"}');
                 }
             }
         }
-        
+
         if (!($conn->exec("END TRANSACTION")))
         {
-            die( $conn->lastErrorMsg());
+            die( '{"res":"' . $conn->lastErrorMsg() . '"}');
         } 
-        
+
         echo '{"res":"OK"}';
     } 
     else if ($method=="GET") 
@@ -144,7 +153,8 @@
             $q =  escapeJsonString($row["label"]);
             $x =  $row["x"];
             $y =  $row["y"];
-            echo '{"id":"'.$id.'", "q":"'.$q.'", "x":'.$x.', "y":'.$y.'}';
+            $u =  $row["username"];
+            echo '{"id":"'.$id.'", "q":"'.$q.'", "x":'.$x.', "y":'.$y.', "u":"'.$u.'"}';
             $counter++;
         }
         
@@ -162,13 +172,14 @@
             $id = $row["id"];
             $s = $row["source"];
             $t = $row["target"];
-            $l =  escapeJsonString($row["answer"]);
-            echo '{"id":"'.$id.'","s":"'.$s.'","t":"'.$t.'","l":"'.$l.'"}';
+            $l = escapeJsonString($row["answer"]);
+            $u = $row["username"];
+            echo '{"id":"'.$id.'","s":"'.$s.'","t":"'.$t.'","l":"'.$l.'","u":"'.$u.'"}';
 
             $counter++;
         }
         
-        echo "] }";
+        echo '],"res":"OK" }';
         
     }
     else if ($method=="DELETE") 
@@ -179,7 +190,7 @@
         
         if (!($conn->exec("BEGIN TRANSACTION")))
         {
-            die( $conn->lastErrorMsg());
+            die( '{"res":"' . $conn->lastErrorMsg() . '"}');
         } 
 
         if (array_key_exists("nodes", $data)==true)
@@ -190,7 +201,7 @@
                 $str = "delete from NODES where id='$id'";
                 if (!$conn->exec($str)) 
                 {
-                    die( "Insert failed: $str " . $conn->lastErrorMsg());
+                    die( '{"res":"Node Insert failed: ' . $str . '  ' . $conn->lastErrorMsg() . '"}');
                 }
             }
         }
@@ -203,14 +214,14 @@
                 $str = "delete from EDGES where id='$id'";
                 if (!$conn->exec($str)) 
                 {
-                    die( "Insert failed: $str " . $conn->lastErrorMsg());
+                    die( '{"res":"Edge Insert failed: ' . $str . '  ' . $conn->lastErrorMsg() . '"}');
                 }
             }
         }
         
         if (!($conn->exec("END TRANSACTION")))
         {
-            die( $conn->lastErrorMsg());
+            die( '{"res":"' . $conn->lastErrorMsg() . '"}');
         } 
         
         echo '{"res":"OK"}';

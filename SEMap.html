@@ -41,7 +41,12 @@
                         url: "SEMapDatabase.php",
                         dataType: "json",
                         data: JSON.stringify({"credentials":credentials}),
-                        success: successFunction
+                      success: function(data)
+			{
+			    if (data.res!="OK") alert(data.res);
+			    if (successFunction!=undefined) 
+				successFunction(data);
+			}
                     });
                 }
 		        
@@ -50,9 +55,14 @@
                    $.ajax({
                       type: "POST",
                       url: "./SEMapDatabase.php",
-                      dataType: "text",
+                      dataType: "json",
                       data: JSON.stringify({nodes:nodes, edges:edges, credentials:credentials }),
-                      success: successFunction
+                      success: function(data)
+			{
+			    if (data.res!="OK") alert(data.res);
+			    if (successFunction!=undefined) 
+				successFunction(data);
+			}
                     });                    
                 }
 		
@@ -64,16 +74,28 @@
                       dataType: "json",
                       contentType: "application/json; charset=utf-8",
                       data: JSON.stringify({nodes:nodes, edges:edges, credentials:credentials }),
-                      success : successFunction
+                      success: function(data)
+			{
+			    if (data.res!="OK") alert(data.res);
+			    if (successFunction!=undefined) 
+				successFunction(data);
+			}
                     });                    
                 }
 		
-                this.LoadDataFromDatabase = function (callback)		    
+                this.LoadDataFromDatabase = function (successFunction)		    
                 {
-                    $.get("./SEMapDatabase.php", function(data)
-                    {
-                        callback(data);
-                    });
+                   $.ajax({
+                      type: "GET",
+                      url: "./SEMapDatabase.php",
+                      dataType: "json",
+                      success: function(data)
+			{
+			    if (data.res!="OK") alert(data.res);
+			    if (successFunction!=undefined) 
+				successFunction(data);
+			}
+                    });                    
                 }
 		    }
 		    
@@ -90,8 +112,8 @@
 		            credentials.username = user;
 		            credentials.password = pass;
 
-                    backend.setCredentials(credentials, callback)
-		        }
+            		    backend.setCredentials(credentials, callback)
+			}
 		        
                 this.POST = function(eles, successFunction)
                 {
@@ -138,8 +160,6 @@
                     // load elements from database and build diagram                
                     backend.LoadDataFromDatabase( function(data)
                     {
-                        var data = JSON.parse(data);
-                        
                         var elms = []
                         
                         var nodes = data["nodes"];
@@ -195,8 +215,8 @@
                 function logOut()
                 {
                     $("#loginlogout").text("LogIn");        
-                    credentials["username"] = "";
-                    credentials["password"] = "";
+		    $("#username").val("")
+		    $("#password").val("")
                     $(".admin").hide();
                 }
     
