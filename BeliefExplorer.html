@@ -95,30 +95,39 @@ $(document).ready(function()
     
     history.replaceState(startingPoint, "", locationNoVars + "?q="+startingPoint);
     
-    $.get("./SEMapDatabase.php", function(data)
-    {
-        var data = JSON.parse(data);
-        Database = {}
+    $.ajax({
+            type: "GET",
+            url: "./SEMapDatabase.php",
+            dataType: "json",
+            success: function(data)
+	    {
+	        if (data.res!="OK") 
+		{
+		    alert(data.res);
+		}
+	        else
+		{
+	            Database = {}
     
-        var nodes = data["nodes"];
-        for(var node in nodes)
-        {
-            var n = nodes[node];
-            Database[n["id"]]={question:n["q"], answers:{}};
-        }    
+	            var nodes = data["nodes"];
+	            for(var node in nodes)
+	            {
+	                var n = nodes[node];
+	                Database[n["id"]]={question:n["q"], answers:{}};
+	            }    
         
-        var edges = data["edges"];
-        for(var edge in edges)
-        {
-            var e = edges[edge];
-            Database[e["s"]].answers[e["l"]] = e["t"];
-        }    
+	            var edges = data["edges"];
+	            for(var edge in edges)
+	            {
+	                var e = edges[edge];
+	                Database[e["s"]].answers[e["l"]] = e["t"];
+	            }    
 
-
-        Validate(startingPoint);
-        Process(startingPoint,  "");
-
-    });    
+	            Validate(startingPoint);
+	            Process(startingPoint,  "");
+		}
+	    }
+	});    
 })
 
 </script>
