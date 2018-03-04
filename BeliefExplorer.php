@@ -8,7 +8,6 @@
 <meta property="og:description" content="Explore your belief here" />
 <meta property="fb:app_id"      content="106897846035392"/>
 <meta property="og:title"       content="<?php
-
 //<meta property="og:url"         content="https://semap.duckdns.org/BeliefExplorer.php"/>
 
 // Create connection
@@ -32,10 +31,11 @@
     }
     echo $row["label"];
     $conn->close();
-?>" />
+?>"/>
+<link rel="icon" href="/BeliefExplorer_200x200.png">
 <title>Belief Explorer</title>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-<link rel="stylesheet" href="https://gitcdn.link/repo/Chalarangelo/mini.css/master/dist/mini-default.min.css">
+<link rel="stylesheet" href="mini-default.min.css">
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-3425939-8"></script>
 <script>
@@ -82,17 +82,17 @@ function Process(sectionName, itemChosen)
     var item = Database[sectionName];
  
     var comments = $("#comments");
+    $("#comments").html("<div class='fb-comments' data-href='"+window.location.href+"' width='450' data-numposts='5'></div>");
+
+
     if (firstTime)
     {
-        $("#comments").html("<div class='fb-comments' data-href='"+window.location.href+"' width='450' data-numposts='5'></div>");
         firstTime = false;
     }
     else
     {
-        $("#comments").html("<div class='fb-comments' data-href='"+window.location.href+"' width='450' data-numposts='5'></div>");
         FB.XFBML.parse($("#comments")[0]);
     }
-
  
     if (item.question =="No question")
     {
@@ -138,6 +138,23 @@ $(document).ready(function()
     window.dataLayer = window.dataLayer || [];
     gtag('js', new Date());
     gtag('config', 'UA-3425939-8');
+
+    window.fbAsyncInit = function() {
+        FB.init({
+            appId      : '106897846035392',
+            xfbml      : false,
+            version    : 'v2.11'
+        });
+        FB.AppEvents.logPageView();
+    };    
+    
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.11&appId=106897846035392';
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
 
     $.ajax({
         type: "GET",
@@ -189,13 +206,8 @@ $(document).ready(function()
 </head>
 <body>
     <div id="fb-root"></div>
-    <script>(function(d, s, id) {
-      var js, fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) return;
-      js = d.createElement(s); js.id = id;
-      js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.11&appId=106897846035392';
-      fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));</script>    
+    <script>
+</script>    
     
     <header class="sticky">
         <img src="BeliefExplorer_200x200.png" style="max-height: 100%;max-width: 100%;position: relative;padding-top: 0;margin-top: 0;" alt="thinker logo" class="button">
