@@ -1,14 +1,14 @@
 <!DOCTYPE html> 
 <html>
-	<head>
-		<title>SE Map</title>
-		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+    <head>
+        <title>SE Map</title>
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="  crossorigin="anonymous"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.5/cytoscape.min.js"></script>
-		<script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cola/1.6.0/cola.js"></script>
-		<script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cola/1.6.0/cytoscape-cola.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.5/cytoscape.min.js"></script>
+        <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cola/1.6.0/cola.js"></script>
+        <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cola/1.6.0/cytoscape-cola.js"></script>
         <link rel="stylesheet" href="mini-default.min.css">
-		<style>
+        <style>
             body { margin: 0; }
             .responsive-label { align-items: center; }
             .wide  {  margin: auto; }
@@ -19,102 +19,76 @@
                 height: calc(100vh - 70px);
                 background-color: #eeeeee;
             }
-		</style>
+        </style>
         <!-- Global site tag (gtag.js) - Google Analytics -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=UA-3425939-8"></script>
         <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-        
-          gtag('config', 'UA-3425939-8');
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'UA-3425939-8');
         </script>
-		<script>
-		    function databaseHTTP()
-		    {
-		        var credentials = {};
+        <script>
+            function databaseHTTP()
+            {
+                var credentials = {};
+                
+                this.ajax = function (_type, _data, _successFunction)
+                {
+                    $.ajax({
+                        type: _type,
+                        url: "./SEMapDatabase.php",
+                        dataType: "json",
+                        data: _data,
+                        success: function (data)
+                        {
+                            if (data.res!="OK") 
+                            {
+                                alert(data.res);
+                            }
+                            else
+                            {
+                                if (_successFunction!=undefined) 
+                                    _successFunction(data);
+                            }
+                        }
+                    });
+                }
+                
                 this.setCredentials = function (_credentials, successFunction)		    
                 {
                     credentials = _credentials;
-                    $.ajax({
-                        type: "POST",
-                        url: "SEMapDatabase.php",
-                        dataType: "json",
-                        data: JSON.stringify({"credentials":credentials}),
-                      success: function(data)
-			{
-			    if (data.res!="OK") alert(data.res);
-			    if (successFunction!=undefined) 
-				successFunction(data);
-			}
-                    });
+                    this.ajax("POST", JSON.stringify({credentials:credentials}), successFunction);
                 }
-		        
+                
                 this.POST = function (nodes, edges, successFunction)		    
                 {
-                   $.ajax({
-                      type: "POST",
-                      url: "./SEMapDatabase.php",
-                      dataType: "json",
-                      data: JSON.stringify({nodes:nodes, edges:edges, credentials:credentials }),
-                      success: function(data)
-			{
-			    if (data.res!="OK") alert(data.res);
-			    if (successFunction!=undefined) 
-				successFunction(data);
-			}
-                    });                    
+                    this.ajax("POST", JSON.stringify({nodes:nodes, edges:edges, credentials:credentials }), successFunction);
                 }
-		
+        
                 this.DELETE = function (nodes, edges, successFunction)		    
                 {
-                    $.ajax({
-                      type: "DELETE",
-                      url: "./SEMapDatabase.php",
-                      dataType: "json",
-                      contentType: "application/json; charset=utf-8",
-                      data: JSON.stringify({nodes:nodes, edges:edges, credentials:credentials }),
-                      success: function(data)
-			{
-			    if (data.res!="OK") alert(data.res);
-			    if (successFunction!=undefined) 
-				successFunction(data);
-			}
-                    });                    
+                    this.ajax("DELETE", JSON.stringify({nodes:nodes, edges:edges, credentials:credentials }), successFunction);
                 }
-		
+        
                 this.LoadDataFromDatabase = function (successFunction)		    
                 {
-                   $.ajax({
-                      type: "GET",
-                      url: "./SEMapDatabase.php",
-                      dataType: "json",
-                      success: function(data)
-			{
-			    if (data.res!="OK") alert(data.res);
-			    if (successFunction!=undefined) 
-				successFunction(data);
-			}
-                    });                    
+                    this.ajax("GET", undefined, successFunction);
                 }
-		    }
-		    
+            }
+            
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		    // Database loading, deleting, saving
-		    //
-		    function databaseIO(_backend)
-		    {
-		        var backend = _backend;
-		        var credentials = { username: "", password : ""};
-		        
-		        this.setCredentials = function (user,pass, callback)
-		        {
-		            credentials.username = user;
-		            credentials.password = pass;
-
-            		    backend.setCredentials(credentials, callback)
-			}
-		        
+            // Database loading, deleting, saving
+            //
+            function databaseIO(_backend)
+            {
+                var backend = _backend;
+                
+                this.setCredentials = function (user,pass, callback)
+                {
+                    backend.setCredentials({ username: user, password : pass}, callback)
+                }
+                
                 this.POST = function(eles, successFunction)
                 {
                     var nodes = [];
@@ -181,11 +155,10 @@
                         cy.autolock( true );
                     });
                 }
-		    }
-		    
-		    
-		    base = new databaseIO(new databaseHTTP());
-		    
+            }
+            
+            base = new databaseIO(new databaseHTTP());
+            
             function SetStyle()
             {
                 var nds = cy.nodes()
@@ -197,12 +170,12 @@
                     }
                     else
                     {
-                       nds[i].style({'border-color': 'black', "border-width":5})
+                        nds[i].style({'border-color': 'black', "border-width":5})
                     }
                 }                
             }
 
-			document.addEventListener('DOMContentLoaded', function()
+            document.addEventListener('DOMContentLoaded', function()
             {
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // Login stuff
@@ -215,8 +188,8 @@
                 function logOut()
                 {
                     $("#loginlogout").text("LogIn");        
-		    $("#username").val("")
-		    $("#password").val("")
+                    $("#username").val("")
+                    $("#password").val("")
                     $(".admin").hide();
                 }
     
@@ -259,22 +232,22 @@
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // Handle graph's UI
                 //
-				var cy = window.cy = cytoscape(
-				{
-					container: document.getElementById('cy'),
+                var cy = window.cy = cytoscape(
+                {
+                    container: document.getElementById('cy'),
                     boxSelectionEnabled: false,
                     
                     minZoom: 0.1,
                     maxZoom: 100,
                     wheelSensitivity: 0.1,
                     
-					style: 
-					[
-						{
-							selector: 'node',
-							css: 
-							{
-								'content': 'data(label)',
+                    style: 
+                    [
+                        {
+                            selector: 'node',
+                            css: 
+                            {
+                                'content': 'data(label)',
                                 'text-valign': 'center',
                                 'text-halign': 'center',
                                 'shape': 'roundrectangle',
@@ -282,19 +255,19 @@
                                 'width': '300px',       
                                 'text-max-width' : '300px',
                                 'height': '100px',     
-							}
-						},
-						{
-							selector: 'edge',
-							css: 
+                            }
+                        },
+                        {
+                            selector: 'edge',
+                            css: 
                             {
                                 'curve-style': 'bezier',
                                 'label': 'data(label)',
-								'target-arrow-shape': 'triangle'
-							}
-						}
-					]
-				});
+                                'target-arrow-shape': 'triangle'
+                            }
+                        }
+                    ]
+                });
 
                 // tapholding brings up a dialog to edit the node and the enges text
                 cy.on('taphold', 'node', function(evt)
@@ -414,9 +387,9 @@
                     if (!loggedIn()) return;
                     
                     cy.layout({
-						name: 'cola',
+                        name: 'cola',
                         edgeLength:400
-					}).start(10)
+                    }).start(10)
                 });
 
                 $( "#saveDatabase" ).click(function() 
@@ -439,13 +412,13 @@
                 //
                 base.LoadDataFromDatabase();
                 $("#modal-help").prop("checked", true);
-			});
+            });
         
-		</script>
-	</head>
-	<body>
-	    
-	    <!-- header -->
+        </script>
+    </head>
+    <body>
+        
+        <!-- header -->
         <header class="sticky">
           <a href="#" class="logo">SE Map</a>
           <button id="help" >Help</button>
@@ -466,8 +439,8 @@
         </div>
 
         <!-- editing dialog -->
-        <input id="modal-edit" type="checkbox"/>
-        <div class="modal">
+        <input id="modal-edit" type="checkbox" class="modal">
+        <div>
           <div class="wide" style="width:750px">
             <label for="modal-edit"></label>
             <form>
@@ -491,8 +464,8 @@
         </div>
 
         <!-- login dialog -->
-        <input id="modal-login" type="checkbox"/>
-        <div class="modal">
+        <input id="modal-login" type="checkbox" class="modal">
+        <div>
             <div class="wide">
             <!-- Adding some flex properties to center the form and some height to the page, these can be omitted -->
               <label for="modal-login"></label>
@@ -517,8 +490,8 @@
         </div>
 
         <!-- help dialog -->
-        <input id="modal-help" type="checkbox"/>
-        <div class="modal">
+        <input id="modal-help" type="checkbox" class="modal">
+        <div>
             <div class="wide">
                 <div class="card large">
                     <div class="section">
@@ -532,13 +505,13 @@
                             <button type="button" class="primary" onclick='$("#modal-help").prop("checked", false);' id="login">OK</button>
                         </div>
                     </div>
-                </div>                
+                </div>
             </div>
         </div>
 
         <!-- help dialog -->
-        <input id="modal-admin-help" type="checkbox"/>
-        <div class="modal">
+        <input id="modal-admin-help" type="checkbox" class="modal">
+        <div>
             <div class="wide">
                 <div class="card large">
                     <div class="section">
@@ -555,9 +528,9 @@
                             <button type="button" class="primary" onclick='$("#modal-admin-help").prop("checked", false);' id="login">OK</button>
                         </div>
                     </div>
-                </div>                
+                </div>
             </div>
         </div>
         
-	</body>
+    </body>
 </html>

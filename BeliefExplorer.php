@@ -161,29 +161,29 @@ $(document).ready(function()
         url: "./SEMapDatabase.php",
         dataType: "json",
         success: function(data)
-	    {
-	        if (data.res!="OK") 
-    		{
-    		    alert(data.res);
-    		}
-	        else
-    		{
-	            Database = {}
+        {
+            if (data.res!="OK") 
+            {
+                alert(data.res);
+            }
+            else
+            {
+                Database = {}
     
-	            var nodes = data["nodes"];
-	            for(var node in nodes)
-	            {
-	                var n = nodes[node];
-	                Database[n["id"]]={question:n["q"], answers:{}};
-	            }    
+                var nodes = data["nodes"];
+                for(var node in nodes)
+                {
+                    var n = nodes[node];
+                    Database[n["id"]]={question:n["q"], answers:{}};
+                }    
         
-	            var edges = data["edges"];
-	            for(var edge in edges)
-	            {
-	                var e = edges[edge];
-	                if (Database[e["s"]]!==undefined)
-	                    Database[e["s"]].answers[e["l"]] = e["t"];
-	            }    
+                var edges = data["edges"];
+                for(var edge in edges)
+                {
+                    var e = edges[edge];
+                    if (Database[e["s"]]!==undefined)
+                        Database[e["s"]].answers[e["l"]] = e["t"];
+                }    
                 
                 var startingPoint = "0244388211625568";
                 
@@ -196,10 +196,10 @@ $(document).ready(function()
                 
                 history.replaceState(startingPoint, "", locationNoVars + "?q="+startingPoint);
                 
-	            Process(startingPoint,  "");
-	    	}
-	    }
-	});    
+                Process(startingPoint,  "");
+            }
+        }
+    });    
 })
 
 </script>
@@ -213,7 +213,7 @@ $(document).ready(function()
         <img src="BeliefExplorer_200x200.png" style="max-height: 100%;max-width: 100%;position: relative;padding-top: 0;margin-top: 0;" alt="thinker logo" class="button">
         <a href="https://semap.duckdns.org/BeliefExplorer.php" class="logo">&nbsp;Belief Explorer</a>
         <div class="fb-like" data-href="https://semap.duckdns.org/BeliefExplorer.php" data-layout="button_count" data-action="like" data-size="large" data-show-faces="false" data-share="false" ></div>    </header>
-	<div class="container">
+    <div class="container">
         <div class="row">
             <div class="col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3 col-sm-12">
                 <div style='text-align: center;' id="cardTitle"></div>
@@ -230,7 +230,7 @@ $(document).ready(function()
     </div>
     <br>
     <br>
-	<div class="container">
+    <div class="container">
         <div class="row">
             <div class="col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3 col-sm-12">
                 <div style='text-align: center;' >Enjoy the comment section, please keep it constructive!</div>

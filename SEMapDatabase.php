@@ -1,6 +1,4 @@
 <?php
-
-
     function escapeJsonString($value) 
     { 
         # list from www.json.org: (\b backspace, \f formfeed)
@@ -31,12 +29,12 @@
             {
                 if ($users[$username]!=$password)
                 {   
-		    die('{"res":"bad login/passwd"}');
+                    die('{"res":"bad login/passwd"}');
                 }
-		else
-		{
-		    return $username;
-		}	
+                else
+                {
+                    return $username;
+                }
             }
             else
             {
@@ -54,7 +52,6 @@
     date_default_timezone_set("Europe/Brussels"); 
     
     header("Content-Type: application/javascript; charset=us-ascii");
-    //header("Content-Type: text/plain; charset=us-ascii");
     header_remove("Transfer-Encoding"); 
     header_remove("Connection");
 
