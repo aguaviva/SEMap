@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Belief Explorer</title>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-<link rel="stylesheet" href="https://gitcdn.link/repo/Chalarangelo/mini.css/master/dist/mini-default.min.css">
+<link rel="stylesheet" href="mini-default.min.css">
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-3425939-8"></script>
 <script>
@@ -99,35 +99,35 @@ $(document).ready(function()
             url: "./SEMapDatabase.php",
             dataType: "json",
             success: function(data)
-            {
-                if (data.res!="OK") 
-                {
-                    alert(data.res);
-                }
-                else
-                {
-                    Database = {}
-
-                    var nodes = data["nodes"];
-                    for(var node in nodes)
-                    {
-                        var n = nodes[node];
-                        Database[n["id"]]={question:n["q"], answers:{}};
-                    }
-
-                    var edges = data["edges"];
-                    for(var edge in edges)
-                    {
-                        var e = edges[edge];
-                        Database[e["s"]].answers[e["l"]] = e["t"];
-                    }
-
-                    Validate(startingPoint);
-                    Process(startingPoint,  "");
-                }
-            }
-        });
-})
+    	    {
+    	        if (data.res!="OK") 
+        		{
+        		    alert(data.res);
+        		}
+    	        else
+        		{
+    	            Database = {}
+        
+    	            var nodes = data["nodes"];
+    	            for(var node in nodes)
+    	            {
+    	                var n = nodes[node];
+    	                Database[n["id"]]={question:n["q"], answers:{}};
+    	            }    
+            
+    	            var edges = data["edges"];
+    	            for(var edge in edges)
+    	            {
+    	                var e = edges[edge];
+    	                Database[e["s"]].answers[e["l"]] = e["t"];
+    	            }    
+    
+    	            Validate(startingPoint);
+    	            Process(startingPoint,  "");
+        		}
+	        }
+	    });    
+    })
 
 </script>
 </head>
@@ -135,7 +135,7 @@ $(document).ready(function()
     <header  class="sticky">
         <a href="#" class="logo">Belief Explorer</a>
     </header>
-        <div class="container">
+	<div class="container">
         <div class="row">
             <div class="col-sm"></div>
             <div class="col-lg-4 col-md-6  col-sm-12" style="height: calc(100vh - 10.25rem); display: flex; align-items: center; flex: 0 1 auto;">
