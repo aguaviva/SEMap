@@ -58,7 +58,7 @@
                                     _successFunction(data);
                             }
                         },
-                        error: function (data) { if (_error!=undefined) _error(); }
+                        error: function (data) { if (_error!=undefined) _error(data); }
                     });
                 }
                 
@@ -80,7 +80,7 @@
         
                 this.LoadDataFromDatabase = function (successFunction)		    
                 {
-                    this.ajax("GET", undefined, successFunction, function() 
+                    this.ajax("GET", undefined, successFunction, function(data) 
                     {
                         // We failed to get the data from the php backend, 
                         // this means we are in a static website, in this case
