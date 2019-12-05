@@ -29,7 +29,6 @@ function Process(sectionName, itemChosen)
     variables[sectionName] = itemChosen;
     item = Database[sectionName];
  
- 
     $("#question").html(item.question.replace(/(<.*>)/, itemChosen))
     var a="<ul>";
     for(var key in item.answers)
@@ -93,7 +92,9 @@ $(document).ready(function()
     }
     
     history.replaceState(startingPoint, "", locationNoVars + "?q="+startingPoint);
-    
+
+    // Parse JSON 
+    //
     function processJSON(data)
     {
         if (data.res!="OK") 

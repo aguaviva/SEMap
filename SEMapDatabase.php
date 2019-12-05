@@ -92,7 +92,6 @@
 
         if (array_key_exists("nodes", $data)==true)
         {
-
             $nodelist = $data["nodes"];
             foreach ($nodelist as $node) 
             {
@@ -105,7 +104,7 @@
                 $str = "insert or replace INTO NODES values( '$id', '$l', '$x', '$y', '$u', datetime('now') )";
                 if (!$conn->exec($str)) 
                 {
-                    die( '{"res":"Node Insert failed: ' . escapeJsonString($str) . '  ' . $conn->lastErrorMsg() . '"}');
+                    die( '{"res":"Node Insert failed: ' . $conn->lastErrorMsg() . '\n\n'  . escapeJsonString($str) . '"}');
                 }
             }
         }
@@ -113,7 +112,7 @@
         if (array_key_exists("edges", $data)==true)
         {
             $edgelist = $data["edges"];
-            foreach ($edgelist as $edge) 
+            foreach ($edgelist as $edge)
             {
                 $id = SQLite3::escapeString($edge["id"]);
                 $s  = SQLite3::escapeString($edge["s"]);

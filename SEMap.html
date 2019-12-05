@@ -32,9 +32,15 @@
             function databaseHTTP()
             {
                 var credentials = {};
+                var bIsDynamicWebsite = true;
                 
-                this.ajax = function (_type, _data, _successFunction)
+                this.isDynamicWebsite = function () { return bIsDynamicWebsite; }  		    
+                
+                this.ajax = function (_type, _data, _successFunction, _error)
                 {
+                    if (bIsDynamicWebsite == false)
+                        return;
+                    
                     $.ajax({
                         type: _type,
                         url: "./SEMapDatabase.php",
@@ -51,7 +57,8 @@
                                 if (_successFunction!=undefined) 
                                     _successFunction(data);
                             }
-                        }
+                        },
+                        error: function (data) { if (_error!=undefined) _error(); }
                     });
                 }
                 
@@ -73,8 +80,26 @@
         
                 this.LoadDataFromDatabase = function (successFunction)		    
                 {
-                    this.ajax("GET", undefined, successFunction);
+                    this.ajax("GET", undefined, successFunction, function() 
+                    {
+                        // We failed to get the data from the php backend, 
+                        // this means we are in a static website, in this case
+                        // we try to get the data from a static json file.
+                        // This json file can be generated with the generateJSONs.sh script
+                        bIsDynamicWebsite = false;
+                        
+                        $.ajax({
+                                type: "GET",
+                                url: "./SEMap_en.json",
+                                dataType: "json",
+                                success: function(data)
+                        	    {
+                        		    successFunction(data);
+                    	        }
+                            });
+                    });
                 }
+                
             }
             
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +108,8 @@
             function databaseIO(_backend)
             {
                 var backend = _backend;
+                
+                this.isDynamicWebsite = function () { return backend.isDynamicWebsite(); }  		    
                 
                 this.setCredentials = function (user,pass, callback)
                 {
@@ -129,7 +156,7 @@
                     backend.DELETE(nodes,edges, successFunction);
                 }
     
-                this.LoadDataFromDatabase = function ()
+                this.LoadDataFromDatabase = function ( doneFunction )
                 {
                     // load elements from database and build diagram                
                     backend.LoadDataFromDatabase( function(data)
@@ -153,11 +180,18 @@
                         SetStyle();
                         cy.fit();
                         cy.autolock( true );
+                        
+                        doneFunction();
                     });
                 }
             }
             
-            base = new databaseIO(new databaseHTTP());
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Dynamics
+            //
+            var data = new databaseHTTP();
+            var base = new databaseIO(new databaseHTTP());
+            var bIsLoggedIn = false;
             
             function SetStyle()
             {
@@ -174,34 +208,25 @@
                     }
                 }                
             }
-
-            document.addEventListener('DOMContentLoaded', function()
+            
+            // Will handle editing and logging in/out
+            //
+            function SetUIForDynamicWebsite()
             {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Login stuff
-                //
-                function loggedIn()
-                {
-                    return $("#loginlogout").text()=="Logout";
-                }
-                
-                function logOut()
-                {
-                    $("#loginlogout").text("LogIn");        
-                    $("#username").val("")
-                    $("#password").val("")
-                    $(".admin").hide();
-                }
-    
                 $( "#loginlogout" ).click(function() 
                 {
-                    if (loggedIn())
+                    if (bIsLoggedIn)
                     {
-                        logOut();
+                        // we need to log out
+                        $("#loginlogout").text("LogIn"); bIsLoggedIn=false;
+                        $("#username").val("")
+                        $("#password").val("")
+                        $(".admin").hide();
                         cy.autolock( true );
                     }
                     else
                     {
+                        // show dialog to log in
                         $("#modal-login").prop("checked", true);
                         cy.autolock( false );
                     }
@@ -214,7 +239,7 @@
                         if (res.res=="OK")
                         {
                             $("#modal-login").prop("checked", false);
-                            $("#loginlogout").text("Logout");        
+                            $("#loginlogout").text("Logout"); bIsLoggedIn=true;
                             $(".admin").show();
                             
                             $("#modal-admin-help").prop("checked", true);
@@ -226,11 +251,158 @@
                     });
                 });
 
+                // tapholding brings up a dialog to edit the node and the enges text
+                cy.on('taphold', 'node', function(evt)
+                {
+                    if (bIsLoggedIn==false) return;
+                    
+                    $("#dialog_label").text("Question")
+                    $("#dialog_input").attr("data", evt.target.id());
+                    $("#dialog_input").val(evt.target.data().label)
+                    $("#modal-edit").prop("checked", true);
+                });
+
+                // tapholding brings up a dialog to edit the node and the enges text
+                cy.on('taphold', 'edge', function(evt)
+                {
+                    if (bIsLoggedIn==false) return;
+                    
+                    $("#dialog_label").text("Answer")
+                    $("#dialog_input").attr("data", evt.target.id());
+                    $("#dialog_input").val(evt.target.data().label);
+                    $("#modal-edit").prop("checked", true);
+                });
+
+                // save handler for the text editing dialog
+                $( "#save" ).click(function()
+                {
+                    if (bIsLoggedIn==false) return;
+                    
+                    var q = $("#dialog_input")[0];
+                    var id = q.attributes["data"].nodeValue;
+                    cy.$( "#"+id ).data("label", q.value);
+                    base.POST(cy.$( "#"+id ));
+                    $("#modal-edit").prop("checked", false);
+                });                   
+
+                // 
+                function generateRandomID()
+                {
+                    var id = ""+ Math.random();                    
+                    return id.split(".").join("");
+                }
+
+                //right clicking on a edge inserts a new node
+                cy.on('cxttap', 'edge', function(evt)
+                {
+                    if (bIsLoggedIn==false) return;
+                    
+                    var source = evt.target.source();
+                    var target = evt.target.target();
+                    
+                    var sp = source.position();
+                    var st = target.position();
+                    
+                    var id = generateRandomID();
+                    
+                    var eles = cy.add([
+                      { group: "nodes", data: { id: id, label: "New Node" }, position: { x: (sp.x + st.x)*.5, y: (sp.y + st.y)*.5 } },                      
+                      { group: "edges", data: { id: generateRandomID(), source: source.id(), target: id } },
+                      { group: "edges", data: { id: generateRandomID(), source: id, target: target.id(), label: evt.target.data().label } }
+                    ]);
+                    
+                    base.POST(eles, function(data)
+                    {
+                        var eles = cy.remove(cy.getElementById(evt.target.id()));
+                        SetStyle();
+                        base.DELETE( eles );
+                    });
+                });
+
+                //right clicking on the background creates a node
+                cy.on('cxttap', function(evt)
+                {   
+                    if (bIsLoggedIn==false) return;
+                    
+                    if (evt.target===cy)
+                    {                    
+                        var eles = cy.add([{ group: "nodes", data: { id: generateRandomID(), label: "No question" }, renderedPosition: evt.originalEvent }]);
+                        base.POST(eles);
+                    }
+                });
+                
+                // shift selecting 2 nodes creates a link
+                cy.on('select', 'node', function(evt)
+                {
+                    if (bIsLoggedIn==false) return;
+                    
+                    var node = evt.target;
+                    
+                    var selected = cy.elements(":selected");
+                    if (selected.length==2)
+                    {
+                        var source = (node.id()==selected[1].id())?selected[0].id():selected[1].id();
+                        var target = node.id();
+                    
+                        var eles = cy.add([{ group: "edges", data: { id: generateRandomID(), source: source, target: target, label: "No answer"  } }]); 
+                        SetStyle();
+                        base.POST(eles);
+                    }                    
+                });
+
+                // the delete key erases the selected nodes (sometimes it doesnt work! :( )
+                $('html').keydown(function(e)
+                {
+                    if(e.keyCode == 46) 
+                    {
+                        if($(event.target).is('textarea') || $(event.target).is('input')) 
+                            return;
+
+                        if (bIsLoggedIn==false) return;
+                        
+                        var eles = cy.remove(":selected");
+                        base.DELETE(eles);
+                    }
+                });
+                
+                $( "#saveDatabase" ).click(function() 
+                {
+                    if (bIsLoggedIn==false) return;
+                    
+                    base.POST(cy.nodes());
+                    base.POST(cy.edges());
+                });
+            }
+
+            // Init stuff once the document loads
+            //
+            document.addEventListener('DOMContentLoaded', function()
+            {
                 $(".admin").hide();
 
+                $( "#applyLayout" ).click(function() 
+                {
+                    if (bIsLoggedIn==false) return;
+                    
+                    cy.layout({
+                        name: 'cola',
+                        edgeLength:400
+                    }).start(10)
+                });
 
-                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Handle graph's UI
+                $( "#help" ).click(function() 
+                {
+                    if (bIsLoggedIn==true) 
+                        $('#modal-admin-help').prop('checked', true);
+                    else
+                        $('#modal-help').prop('checked', true);
+                });
+
+                // Show a splash screen with some basic info
+                //
+                $("#modal-help").prop("checked", true);
+
+                // set graph's UI
                 //
                 var cy = window.cy = cytoscape(
                 {
@@ -269,155 +441,40 @@
                     ]
                 });
 
-                // tapholding brings up a dialog to edit the node and the enges text
-                cy.on('taphold', 'node', function(evt)
-                {
-                    if (!loggedIn()) return;
-                    
-                    $("#dialog_label").text("Question")
-                    $("#dialog_input").attr("data", evt.target.id());
-                    $("#dialog_input").val(evt.target.data().label)
-                    $("#modal-edit").prop("checked", true);
-                });
-
-                // tapholding brings up a dialog to edit the node and the enges text
-                cy.on('taphold', 'edge', function(evt)
-                {
-                    if (!loggedIn()) return;
-                    
-                    $("#dialog_label").text("Answer")
-                    $("#dialog_input").attr("data", evt.target.id());
-                    $("#dialog_input").val(evt.target.data().label);
-                    $("#modal-edit").prop("checked", true);
-                });
-
-                // save handler for the text editing dialog
-                $( "#save" ).click(function()
-                {
-                    if (!loggedIn()) return;
-                    
-                    var q = $("#dialog_input")[0];
-                    var id = q.attributes["data"].nodeValue;
-                    cy.$( "#"+id ).data("label", q.value);
-                    base.POST(cy.$( "#"+id ));
-                    $("#modal-edit").prop("checked", false);
-                });                   
-
-                // 
-                function generateRandomID()
-                {
-                    var id = ""+ Math.random();                    
-                    return id.split(".").join("");
-                }
-
-                //right clicking on a edge inserts a new node
-                cy.on('cxttap', 'edge', function(evt)
-                {
-                    if (!loggedIn()) return;
-                    
-                    var source = evt.target.source();
-                    var target = evt.target.target();
-                    
-                    var sp = source.position();
-                    var st = target.position();
-                    
-                    var id = generateRandomID();
-                    
-                    var eles = cy.add([
-                      { group: "nodes", data: { id: id, label: "New Node" }, position: { x: (sp.x + st.x)*.5, y: (sp.y + st.y)*.5 } },                      
-                      { group: "edges", data: { id: generateRandomID(), source: source.id(), target: id } },
-                      { group: "edges", data: { id: generateRandomID(), source: id, target: target.id(), label: evt.target.data().label } }
-                    ]);
-                    base.POST(eles, function(data)
-                    {
-                        var eles = cy.remove(cy.getElementById(evt.target.id()));
-                        SetStyle();
-                        base.DELETE( eles );
-                    });
-                });
-
-                //right clicking on the background creates a node
-                cy.on('cxttap', function(evt)
-                {   
-                    if (!loggedIn()) return;
-                    
-                    if (evt.target===cy)
-                    {                    
-                        var eles = cy.add([{ group: "nodes", data: { id: generateRandomID(), label: "No question" }, renderedPosition: evt.originalEvent }]);
-                        base.POST(eles);
-                    }
-                });
-                
-                // shift selecting 2 nodes creates a link
-                cy.on('select', 'node', function(evt)
-                {
-                    if (!loggedIn()) return;
-                    
-                    var node = evt.target;
-                    
-                    var selected = cy.elements(":selected");
-                    if (selected.length==2)
-                    {
-                        var source = (node.id()==selected[1].id())?selected[0].id():selected[1].id();
-                        var target = node.id();
-                    
-                        var eles = cy.add([{ group: "edges", data: { id: generateRandomID(), source: source, target: target, label: "No answer"  } }]); 
-                        SetStyle();
-                        base.POST(eles);
-                    }                    
-                });
-
-                // the delete key erases the selected nodes (sometimes it doesnt work! :( )
-                $('html').keydown(function(e)
-                {
-                    if(e.keyCode == 46) 
-                    {
-                        if($(event.target).is('textarea') || $(event.target).is('input')) 
-                            return;
-
-                        if (!loggedIn()) return;
-                        
-                        var eles = cy.remove(":selected");
-                        base.DELETE(eles);
-                    }
-                });
-                
-                $( "#applyLayout" ).click(function() 
-                {
-                    if (!loggedIn()) return;
-                    
-                    cy.layout({
-                        name: 'cola',
-                        edgeLength:400
-                    }).start(10)
-                });
-
-                $( "#saveDatabase" ).click(function() 
-                {
-                    if (!loggedIn()) return;
-                    
-                    base.POST(cy.nodes());
-                    base.POST(cy.edges());
-                });
-
-                $( "#help" ).click(function() 
-                {
-                    if (loggedIn()) 
-                        $('#modal-admin-help').prop('checked', true);
-                    else
-                        $('#modal-help').prop('checked', true);
-                });
-
                 // Load graph from database
                 //
-                base.LoadDataFromDatabase();
-                $("#modal-help").prop("checked", true);
+                base.LoadDataFromDatabase( function()
+                {
+                    $( "#loginlogout" ).click(function() 
+                    {
+                        if (base.isDynamicWebsite()==false)
+                        {
+                            alert ("Opps! You'd need this to run in a server with PHP for this in order to work.")
+                        }
+                        else if (bIsLoggedIn==true)
+                        {
+                            logOut();
+                            cy.autolock( true );
+                        }
+                        else
+                        {
+                            $("#modal-login").prop("checked", true);
+                            cy.autolock( false );
+                        }
+                    });
+                    
+                    // if we are in a static website skipt all the login/editing code as it makes no sense
+                    //
+                    if (base.isDynamicWebsite())
+                    {
+                        SetUIForDynamicWebsite();
+                    }
+                });
             });
         
         </script>
     </head>
     <body>
-        
         <!-- header -->
         <header class="sticky">
           <a href="#" class="logo">SE Map</a>
@@ -441,26 +498,26 @@
         <!-- editing dialog -->
         <input id="modal-edit" type="checkbox" class="modal">
         <div>
-          <div class="wide" style="width:750px">
-            <label for="modal-edit"></label>
-            <form>
-                <h3 class="section">Edit field</h3>
-                <fieldset>
-                    <div class="row responsive-label">
-                        <div class="col-sm-12 col-md-3">
-                            <label for="question" id="dialog_label">Question</label>
+            <div class="wide" style="width:750px">
+                <label for="modal-edit"></label>
+                <form>
+                    <h3 class="section">Edit field</h3>
+                    <fieldset>
+                        <div class="row responsive-label">
+                            <div class="col-sm-12 col-md-3">
+                                <label for="question" id="dialog_label">Question</label>
+                            </div>
+                            <div class="col-sm-12 col-md">
+                                <textarea type="text" id="dialog_input" style="width:85%;" rows="3"></textarea>
+                            </div>
                         </div>
-                        <div class="col-sm-12 col-md">
-                            <textarea type="text" id="dialog_input" style="width:85%;" rows="3"></textarea>
+                        <div class="input-group fluid">
+                          <button type="button" class="primary" id="save">Save</button>
+                          <button type="button" class="cancel" onclick='$("#modal-edit").prop("checked", false);'>Cancel</button>
                         </div>
-                    </div>
-                    <div class="input-group fluid">
-                      <button type="button" class="primary" id="save">Save</button>
-                      <button type="button" class="cancel" onclick='$("#modal-edit").prop("checked", false);'>Cancel</button>
-                    </div>
-                </fieldset>
-            </form>
-          </div>
+                    </fieldset>
+                </form>
+            </div>
         </div>
 
         <!-- login dialog -->
@@ -468,65 +525,61 @@
         <div>
             <div class="wide">
             <!-- Adding some flex properties to center the form and some height to the page, these can be omitted -->
-              <label for="modal-login"></label>
-              <form >
-                <fieldset>
-                  <legend>Login form</legend>
-                    <div class="input-group fluid">
-                      <label for="username" style="width: 80px;">Username</label>
-                      <input name="username" value="" id="username" placeholder="username" type="text" >
-                    </div>
-                    <div class="input-group fluid">
-                      <label for="pwd" style="width: 80px;">Password</label>
-                      <input name="password" value="" id="password" placeholder="password" type="password">
-                    </div>
-                    <div class="input-group fluid">
-                      <button type="button" class="primary" id="login">Login</button>
-                      <button type="button" class="cancel" onclick='$("#modal-login").prop("checked", false);'>Cancel</button>
-                    </div>
-                </fieldset>
-              </form>
-            </div>
+                <label for="modal-login"></label>
+                <form>
+                    <fieldset>
+                      <legend>Login form</legend>
+                        <div class="input-group fluid">
+                          <label for="username" style="width: 80px;">Username</label>
+                          <input name="username" value="" id="username" placeholder="username" type="text" >
+                        </div>
+                        <div class="input-group fluid">
+                          <label for="pwd" style="width: 80px;">Password</label>
+                          <input name="password" value="" id="password" placeholder="password" type="password">
+                        </div>
+                        <div class="input-group fluid">
+                          <button type="button" class="primary" id="login">Login</button>
+                          <button type="button" class="cancel" onclick='$("#modal-login").prop("checked", false);'>Cancel</button>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>          
         </div>
 
-        <!-- help dialog -->
+        <!-- Basic Quick start dialog -->
         <input id="modal-help" type="checkbox" class="modal">
-        <div>
-            <div class="wide">
-                <div class="card large">
-                    <div class="section">
-                        <h3>Quick start</h3>
-                        <ul>
-                            <li>Start in the <b>highlighted</b> box and go from there.</li>
-                            <li><b>Controls</b>: same as Google Maps.</li>
-                            <li><b>Help</b> brings back this dialog.</li>
-                        </ul>
-                        <div class="input-group fluid">
-                            <button type="button" class="primary" onclick='$("#modal-help").prop("checked", false);' id="login">OK</button>
-                        </div>
+        <div class="wide">
+            <div class="card large">
+                <div class="section">
+                    <h3>Quick start</h3>
+                    <ul>
+                        <li>Start in the <b>highlighted</b> box and go from there.</li>
+                        <li><b>Controls</b>: same as Google Maps.</li>
+                        <li><b>Help</b> brings back this dialog.</li>
+                    </ul>
+                    <div class="input-group fluid">
+                        <button type="button" class="primary" onclick='$("#modal-help").prop("checked", false);' id="login">OK</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- help dialog -->
+        <!-- Editor help dialog -->
         <input id="modal-admin-help" type="checkbox" class="modal">
-        <div>
-            <div class="wide">
-                <div class="card large">
-                    <div class="section">
-                        <h3>Quick start</h3>
-                        <ul>
-                            <li>The boxes are for the questions, the arrows for the answers</li>
-                            <li><b>Long click</b> for editing text</li>
-                            <li><b>Right click</b> creates a new box</li>
-                            <li><b>Shift + clicking</b> in two boxes links them with an arrow</li>
-                            <li><b>Del</b> key to erase an arrow/box</li>
-                            <li><b>Help</b> brings back this dialog.</li>
-                        </ul>
-                        <div class="input-group fluid">
-                            <button type="button" class="primary" onclick='$("#modal-admin-help").prop("checked", false);' id="login">OK</button>
-                        </div>
+        <div class="wide">
+            <div class="card large">
+                <div class="section">
+                    <h3>Quick start</h3>
+                    <ul>
+                        <li>The boxes are for the questions, the arrows for the answers</li>
+                        <li><b>Long click</b> for editing text</li>
+                        <li><b>Right click</b> creates a new box</li>
+                        <li><b>Shift + clicking</b> in two boxes links them with an arrow</li>
+                        <li><b>Del</b> key to erase an arrow/box</li>
+                        <li><b>Help</b> brings back this dialog.</li>
+                    </ul>
+                    <div class="input-group fluid">
+                        <button type="button" class="primary" onclick='$("#modal-admin-help").prop("checked", false);' id="login">OK</button>
                     </div>
                 </div>
             </div>
