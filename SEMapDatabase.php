@@ -1,13 +1,4 @@
 <?php
-    function escapeJsonString($value) 
-    { 
-        # list from www.json.org: (\b backspace, \f formfeed)
-        $escapers = array("\\", "/", "\"", "\n", "\r", "\t", "\x08", "\x0c");
-        $replacements = array("\\\\", "\\/", "\\\"", "\\n", "\\r", "\\t", "\\f", "\\b");
-        $result = str_replace($escapers, $replacements, $value);
-        return $result;
-    }
-
     function ValidateCredentials($data) 
     {
         require 'users.php';
@@ -99,7 +90,7 @@
                 $l  = SQLite3::escapeString($node["l"]);
                 $x  = SQLite3::escapeString($node["x"]);
                 $y  = SQLite3::escapeString($node["y"]);
-                $u  = $username;
+                $u  = SQLite3::escapeString($username);
 
                 $str = "insert or replace INTO NODES values( '$id', '$l', '$x', '$y', '$u', datetime('now') )";
                 if (!$conn->exec($str)) 
@@ -118,7 +109,7 @@
                 $s  = SQLite3::escapeString($edge["s"]);
                 $t  = SQLite3::escapeString($edge["t"]);
                 $l  = SQLite3::escapeString($edge["l"]);
-                $u  = $username;
+                $u  = SQLite3::escapeString($username);
 
                 $str = "insert or replace INTO EDGES values( '$id', '$s', '$t', '$l', '$u', datetime('now') )";
                 if (!$conn->exec($str)) 
@@ -145,11 +136,11 @@
         {
             if ($counter!=0)
                 echo ',';
-            $id = $row["id"];
-            $q =  escapeJsonString($row["label"]);
-            $x =  $row["x"];
-            $y =  $row["y"];
-            $u =  $row["username"];
+            $id = SQLite3::escapeString($row["id"]);
+            $q =  SQLite3::escapeString($row["label"]);
+            $x =  SQLite3::escapeString($row["x"]);
+            $y =  SQLite3::escapeString($row["y"]);
+            $u =  SQLite3::escapeString($row["username"]);
             echo '{"id":"'.$id.'", "q":"'.$q.'", "x":'.$x.', "y":'.$y.', "u":"'.$u.'"}';
             $counter++;
         }
@@ -165,11 +156,11 @@
             if ($counter!=0)
                 echo ',';
 
-            $id = $row["id"];
-            $s = $row["source"];
-            $t = $row["target"];
-            $l = escapeJsonString($row["answer"]);
-            $u = $row["username"];
+            $id = SQLite3::escapeString($row["id"]);
+            $s = SQLite3::escapeString($row["source"]);
+            $t = SQLite3::escapeString($row["target"]);
+            $l = SQLite3::escapeString($row["answer"]);
+            $u = SQLite3::escapeString($row["username"]);
             echo '{"id":"'.$id.'","s":"'.$s.'","t":"'.$t.'","l":"'.$l.'","u":"'.$u.'"}';
 
             $counter++;
@@ -194,7 +185,7 @@
             $idlist = $data["nodes"];
             foreach ($idlist as $id) 
             {
-                $str = "delete from NODES where id='$id'";
+                $str = "delete from NODES where id='".SQLite3::escapeString($id)."'";
                 if (!$conn->exec($str)) 
                 {
                     die( '{"res":"Node Insert failed: ' . $str . '  ' . $conn->lastErrorMsg() . '"}');
@@ -207,7 +198,7 @@
             $idlist = $data["edges"];
             foreach ($idlist as $id) 
             {
-                $str = "delete from EDGES where id='$id'";
+                $str = "delete from EDGES where id='".SQLite3::escapeString($id)."'";
                 if (!$conn->exec($str)) 
                 {
                     die( '{"res":"Edge Insert failed: ' . $str . '  ' . $conn->lastErrorMsg() . '"}');

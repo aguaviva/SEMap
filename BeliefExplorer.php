@@ -17,15 +17,15 @@
     else
         $conn = new SQLite3("SEMap_en.sqlite");
 
-    $results = $conn->query("SELECT * FROM NODES where id='".$_GET['q']."';");
+    $results = $conn->query("SELECT * FROM NODES where id='".SQLite3::escapeString($_GET['q'])."';");
     $row = $results->fetchArray(1);
     if ($row["label"]=="No question")
     {
-        $results = $conn->query("SELECT * FROM EDGES where target='".$row["id"]."';");
+        $results = $conn->query("SELECT * FROM EDGES where target='".SQLite3::escapeString($row["id"])."';");
         $row = $results->fetchArray(1);
         //echo $row["source"];
         
-        $results = $conn->query("SELECT label FROM NODES where id='".$row["source"]."';");
+        $results = $conn->query("SELECT label FROM NODES where id='".SQLite3::escapeString($row["source"])."';");
         $row = $results->fetchArray(1);
         
     }
@@ -210,7 +210,6 @@ $(document).ready(function()
 </script>    
     
     <header class="sticky">
-        <img src="BeliefExplorer_200x200.png" style="max-height: 100%;max-width: 100%;position: relative;padding-top: 0;margin-top: 0;" alt="thinker logo" class="button">
         <a href="https://semap.duckdns.org/BeliefExplorer.php" class="logo">&nbsp;Belief Explorer</a>
         <div class="fb-like" data-href="https://semap.duckdns.org/BeliefExplorer.php" data-layout="button_count" data-action="like" data-size="large" data-show-faces="false" data-share="false" ></div>    </header>
     <div class="container">

@@ -2,12 +2,13 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Belief Explorer</title>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-<link rel="stylesheet" href="mini-default.min.css">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-3425939-8"></script>
+<style>body {  background-color: gray; }</style>
 <script>
 
 function gtag(){dataLayer.push(arguments);}
@@ -22,17 +23,55 @@ function ProcessWithPush(sectionName, itemChosen)
     Process(sectionName, itemChosen)
 }
 
-function Process(sectionName, itemChosen)
+function setQuestion(text, done)
 {
-    gtag('event', 'page', {'id':sectionName});    
+    var c = 1;
+    var cursorBlinks=0;
+    var cursorChar = "_";
+    var id = setInterval(function () { 
+    
+        $("#question").html(text.substring(0, c) + cursorChar);
+        if (text.length == c)
+        {
+            if((cursorBlinks&16)>0)
+                $("#question").html(text + cursorChar);
+            else
+                $("#question").html(text);
+                
+            cursorBlinks++;
+            if (cursorBlinks>75)
+            {
+                clearInterval(id);    
+                $("#question").html(text);
+                done();
+            }
+        }
+        else
+        {
+            c++;
+        }
+    
+    }, 10);
+}
 
-    variables[sectionName] = itemChosen;
-    item = Database[sectionName];
- 
-    $("#question").html(item.question.replace(/(<.*>)/, itemChosen))
-    var a="<ul>";
+function addAnswer(answer, answerId)
+{
+    res = "";
+    var onClick = 'ProcessWithPush("'+answerId+'", "'+res+'");return false;';
+    var a="";
+    if (Database[answerId]!=undefined)
+        a+="<a href='#' class='list-group-item list-group-item-action' onclick='"+onClick+"'>"+answer+"</a>";
+    else
+        a+="<a href=''onclick='"+onClick+"'>"+answer+"</a>";
+    return a;
+}
+
+function setAnswers(opacity)
+{
+    var a="";
     for(var key in item.answers)
     {
+/*    
         var res = "";
         var match = key.match(/\$(.*)\$/);
         if (match!=null && match.length==2)
@@ -40,18 +79,27 @@ function Process(sectionName, itemChosen)
 
         var answer = key.replace(/(\$)/g,"");
         var nextSectionName = item.answers[key];
+*/
+        a += addAnswer(key, item.answers[key])
 
-        var onClick = 'ProcessWithPush("'+nextSectionName+'", "'+res+'");return false;';
-
-        a+="<li>";
-        if (Database[nextSectionName]!=undefined)
-            a+="<a href=''onclick='"+onClick+"'>"+answer+"</a>";
-        else
-            a+="<div>"+answer+"</div>";
-        a+="</li>";
     }
-    a+="</ul>";
-    $("#answers").html(a)
+
+    $("#answers").html("<div style='opacity: "+opacity+";'>" + a + "</div>")
+}
+
+function Process(sectionName, itemChosen)
+{
+    gtag('event', 'page', {'id':sectionName});    
+
+    variables[sectionName] = itemChosen;
+    item = Database[sectionName];
+ 
+    setAnswers("0");
+ 
+    setQuestion(item.question.replace(/(<.*>)/, itemChosen), function()
+    {
+        setAnswers("1")
+    });
 }
 
 window.onpopstate = function(event) 
@@ -98,10 +146,10 @@ $(document).ready(function()
     function processJSON(data)
     {
         if (data.res!="OK") 
-		{
-		    alert(data.res);
-		    return;
-		}
+        {
+            alert(data.res);
+            return;
+        }
 
         Database = {}
     
@@ -123,14 +171,15 @@ $(document).ready(function()
         Process(startingPoint,  "");
     }
     
+    // try using a server, if not use static file
     $.ajax({
             type: "GET",
             url: "./SEMapDatabase.php",
             dataType: "json",
             success: function(data)
-    	    {
-    		    processJSON(data);
-	        },
+            {
+                processJSON(data);
+            },
             error: function(XMLHttpRequest, textStatus, errorThrown) 
             { 
                 $.ajax({
@@ -138,39 +187,34 @@ $(document).ready(function()
                         url: "./SEMap_en.json",
                         dataType: "json",
                         success: function(data)
-                	    {
-                		    processJSON(data);
-            	        }
+                        {
+                            processJSON(data);
+                        }
                 });    
             } 
-	    });    
+        });    
     })
 
 </script>
 </head>
 <body>
-    <header  class="sticky">
-        <a href="#" class="logo">Belief Explorer</a>
-    </header>
-	<div class="container">
-        <div class="row">
-            <div class="col-sm"></div>
-            <div class="col-lg-4 col-md-6  col-sm-12" style="height: calc(100vh - 10.25rem); display: flex; align-items: center; flex: 0 1 auto;">
-                <form class="shadowed">
-                    <fieldset>
-                        <div id="question"></div>
-                        <br>
-                        <div class="input-group" id="answers"></div>
-                    </fieldset>
-                </form>
+    <nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
+      <a class="navbar-brand" href="">Navbar</a>
+    </nav>
+    
+    <div class=" d-flex align-items-center vh-100">
+        <div class="container ">        
+            
+            <div class="card " style=" height:7rem" >
+                <div class="card-body  align-items-center d-flex ">
+                    <p class="card-text" id="question" ></p>
+                </div>
             </div>
-            <div class="col-sm"></div>
-        </div>
-    </div>
-
-    <footer class="sticky">
-        <p>MIT License | <a href="#">About</a> | <a href="https://github.com/aguaviva/SEMap">Github code</a></p>
-    </footer>
+            <div style=" height:1rem" > </div>
+            <div class="list-group" id="answers">
+            </div>
+        </div> 
+    </div> 
 </body>
 </html>
 
