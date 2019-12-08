@@ -124,6 +124,7 @@
             die( '{"res":"' . $conn->lastErrorMsg() . '"}');
         } 
 
+        header("HTTP/1.1 200 OK");
         echo '{"res":"OK"}';
     } 
     else if ($method=="GET") 
@@ -136,12 +137,12 @@
         {
             if ($counter!=0)
                 echo ',';
-            $id = SQLite3::escapeString($row["id"]);
-            $q =  SQLite3::escapeString($row["label"]);
-            $x =  SQLite3::escapeString($row["x"]);
-            $y =  SQLite3::escapeString($row["y"]);
-            $u =  SQLite3::escapeString($row["username"]);
-            echo '{"id":"'.$id.'", "q":"'.$q.'", "x":'.$x.', "y":'.$y.', "u":"'.$u.'"}';
+            $id = json_encode($row["id"]);
+            $q =  json_encode($row["label"]);
+            $x =  json_encode($row["x"]);
+            $y =  json_encode($row["y"]);
+            $u =  json_encode($row["username"]);
+            echo '{"id":'.$id.', "q":'.$q.', "x":'.$x.', "y":'.$y.', "u":'.$u.'}';
             $counter++;
         }
         
@@ -156,16 +157,17 @@
             if ($counter!=0)
                 echo ',';
 
-            $id = SQLite3::escapeString($row["id"]);
-            $s = SQLite3::escapeString($row["source"]);
-            $t = SQLite3::escapeString($row["target"]);
-            $l = SQLite3::escapeString($row["answer"]);
-            $u = SQLite3::escapeString($row["username"]);
-            echo '{"id":"'.$id.'","s":"'.$s.'","t":"'.$t.'","l":"'.$l.'","u":"'.$u.'"}';
+            $id = json_encode($row["id"]);
+            $s = json_encode($row["source"]);
+            $t = json_encode($row["target"]);
+            $l = json_encode($row["answer"]);
+            $u = json_encode($row["username"]);
+            echo '{"id":'.$id.',"s":'.$s.',"t":'.$t.',"l":'.$l.',"u":'.$u.'}';
 
             $counter++;
         }
         
+        header("HTTP/1.1 200 OK");
         echo '],"res":"OK" }';
         
     }
@@ -211,9 +213,9 @@
             die( '{"res":"' . $conn->lastErrorMsg() . '"}');
         } 
         
+        header("HTTP/1.1 200 OK");
         echo '{"res":"OK"}';
     }    
-    
     
     $conn->close();
 ?>

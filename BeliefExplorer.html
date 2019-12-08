@@ -25,6 +25,8 @@ function ProcessWithPush(sectionName, itemChosen)
 
 function setQuestion(text, done)
 {
+
+    text = text.replace(/\\n/g, "<br />");
     var c = 1;
     var cursorBlinks=0;
     var cursorChar = "_";
@@ -96,7 +98,7 @@ function Process(sectionName, itemChosen)
  
     setAnswers("0");
  
-    setQuestion(item.question.replace(/(<.*>)/, itemChosen), function()
+    setQuestion(item.question.replace(/($.*$)/, itemChosen), function()
     {
         setAnswers("1")
     });
@@ -194,7 +196,6 @@ $(document).ready(function()
             } 
         });    
     })
-
 </script>
 </head>
 <body>
