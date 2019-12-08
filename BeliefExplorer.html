@@ -23,6 +23,9 @@ function ProcessWithPush(sectionName, itemChosen)
     Process(sectionName, itemChosen)
 }
 
+
+var timerId = -1;
+
 function setQuestion(text, done)
 {
 
@@ -30,7 +33,11 @@ function setQuestion(text, done)
     var c = 1;
     var cursorBlinks=0;
     var cursorChar = "_";
-    var id = setInterval(function () { 
+    
+    if (timerId>=0)
+        clearInterval(timerId);    
+
+    timerId = setInterval(function () { 
     
         $("#question").html(text.substring(0, c) + cursorChar);
         if (text.length == c)
@@ -43,7 +50,8 @@ function setQuestion(text, done)
             cursorBlinks++;
             if (cursorBlinks>75)
             {
-                clearInterval(id);    
+                clearInterval(timerId);    
+                timerId = -1;
                 $("#question").html(text + " ");
                 done();
             }
