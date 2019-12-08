@@ -38,13 +38,13 @@ function setQuestion(text, done)
             if((cursorBlinks&16)>0)
                 $("#question").html(text + cursorChar);
             else
-                $("#question").html(text);
+                $("#question").html(text + " ");
                 
             cursorBlinks++;
             if (cursorBlinks>75)
             {
                 clearInterval(id);    
-                $("#question").html(text);
+                $("#question").html(text + " ");
                 done();
             }
         }
@@ -68,7 +68,7 @@ function addAnswer(answer, answerId)
     return a;
 }
 
-function setAnswers(opacity)
+function setAnswers()
 {
     var a="";
     for(var key in item.answers)
@@ -86,7 +86,7 @@ function setAnswers(opacity)
 
     }
 
-    $("#answers").html("<div style='opacity: "+opacity+";'>" + a + "</div>")
+    $("#answers").html(a)
 }
 
 function Process(sectionName, itemChosen)
@@ -96,11 +96,11 @@ function Process(sectionName, itemChosen)
     variables[sectionName] = itemChosen;
     item = Database[sectionName];
  
-    setAnswers("0");
- 
+    $("#answers").html("")
+
     setQuestion(item.question.replace(/($.*$)/, itemChosen), function()
     {
-        setAnswers("1")
+        setAnswers()
     });
 }
 
@@ -203,17 +203,17 @@ $(document).ready(function()
       <a class="navbar-brand" href="">Belief explorer</a>
     </nav>
     
-    <div class=" d-flex align-items-center vh-100">
-        <div class="container ">        
-            
-            <div class="card " style=" height:7rem" >
+    <div class=" d-flex" >
+        <div class="container" >                 
+            <div style=" height:8rem" > </div>
+            <div class="card " style="min-height:7rem" >
                 <div class="card-body  align-items-center d-flex ">
                     <p class="card-text" id="question" ></p>
                 </div>
             </div>
             <div style=" height:1rem" > </div>
-            <div class="list-group" id="answers">
-            </div>
+            <div class="list-group" id="answers"></div>
+            <div style=" height:5rem" > </div>
         </div> 
     </div> 
 </body>
