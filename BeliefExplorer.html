@@ -23,12 +23,10 @@ function ProcessWithPush(sectionName, itemChosen)
     Process(sectionName, itemChosen)
 }
 
-
 var timerId = -1;
 
 function setQuestion(text, done)
 {
-
     text = text.replace(/\\n/g, "<br />");
     var c = 1;
     var cursorBlinks=0;
@@ -146,7 +144,11 @@ $(document).ready(function()
     locationNoVars = splitUrl[0]
     if (splitUrl.length==2)
     {
-        startingPoint =  splitUrl[1].split("=")[1]; 
+		var params = splitUrl[1].split("=")
+		if (params[0]=="q")
+		{
+			startingPoint =  splitUrl[1].split("=")[1]; 
+		}
     }
     
     history.replaceState(startingPoint, "", locationNoVars + "?q="+startingPoint);
